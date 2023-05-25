@@ -1,6 +1,8 @@
 package com.yue.sqlfilter.controller;
 
 import cn.hutool.core.io.IoUtil;
+import com.yue.sqlfilter.common.ErrorCode;
+import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class SqlFilterController {
 
     @PostMapping("/insert")
     public void getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
+        ThrowUtils.throwIf(sqlFilterService.validationField(sqlField), ErrorCode.PARAMS_ERROR);
         Map<String, String> map = null;
         try {
             map = sqlFilterService.insertFilter(multipartFile, sqlField);
@@ -39,7 +42,7 @@ public class SqlFilterController {
         String ids = map.get("ids");
         String idNum = map.get("idNum");
         String sqlContent = map.get("SQLContent");
-        byte[] idContent = (idNum + "\n" + ids).getBytes(StandardCharsets.UTF_8);
+        byte[] idContent = ("主键主数量："+idNum + "\n" +"主键内容：\n"+ ids+"\n").getBytes(StandardCharsets.UTF_8);
         // 创建 ResponseHeaders
 //        HttpHeaders headers = new HttpHeaders();
 ////        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=file1.txt");
@@ -51,16 +54,16 @@ public class SqlFilterController {
 //        }});
 
         try {
-            response.setHeader("Content-Disposition","attachment;filename="+ URLEncoder.encode("数据治理报表导出文件.text", "utf-8"));
+            response.setHeader("Content-Disposition","attachment;filename="+ URLEncoder.encode("sql.text", "utf-8"));
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
             ServletOutputStream outputStream = response.getOutputStream();
-            outputStream.write(sqlContent.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(idContent);
+            outputStream.write(("\ninsertSQL语句：\n"+sqlContent).getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
             outputStream.close();
             IoUtil.close(outputStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        return ResultUtils.success("下载成功");
     }
 }

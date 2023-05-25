@@ -2,8 +2,6 @@ package com.yue.sqlfilter.service.imp;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
-import com.yue.sqlfilter.common.ErrorCode;
-import com.yue.sqlfilter.common.ResultUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
 import com.yue.sqlfilter.utils.SqlUtil;
@@ -34,17 +32,20 @@ public class SqlFilterImpl implements SqlFilterService {
         }
         String[] arr1 = field1.toLowerCase().replaceAll("\\s", "").split(",");
         String[] arr2 = field2.toLowerCase().replaceAll("\\s", "").split(",");
-        List<Integer> excludeList = SqlUtil.elementIndex(arr1, arr2);
+
+        List<Integer> excludeList = SqlUtil.elementIndex(arr2, arr1);
 //        FileReader fileReader = new FileReader("D:\\code\\yue-project\\sql-filter\\basic-sql.text");
 //        String string = fileReader.readString();
         String[] split = content.split(";");
-        String oldTableName = "`hljqlk-center`.`up_task_public_basic`";
-        String newTableName = "`hz_material_file`.`dn_task_public_basic`";
+//        String oldTableName = "`hljqlk-center`.`up_task_public_basic`";
+        String oldTableName = sqlField.getOldTableName();
+//        String newTableName = "`hz_material_file`.`dn_task_public_basic`";
+        String newTableName = sqlField.getNewTableName();
         StringBuilder stringBuilder = new StringBuilder();
 
         for (int i = 0; i < split.length; i++) {
             try {
-                String newSqlContent = this.sqlFilter(split[i], excludeList, oldTableName, newTableName, idField);
+                String newSqlContent = this.sqlFilter(split[i], excludeList, oldTableName, newTableName, idField,sqlField.getConvertType());
                 stringBuilder.append(newSqlContent);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -61,6 +62,20 @@ public class SqlFilterImpl implements SqlFilterService {
         return map;
     }
 
+    @Override
+    public boolean validationField(SqlField sqlField) {
+        boolean field1 = StrUtil.isBlank(sqlField.getField1());
+        boolean field2 = StrUtil.isBlank(sqlField.getField2());
+        boolean idField = StrUtil.isBlank(sqlField.getIdField());
+        boolean oldTableName = StrUtil.isBlank(sqlField.getOldTableName());
+        boolean newTableName = StrUtil.isBlank(sqlField.getNewTableName());
+        if (field1 || field2 || idField || oldTableName || newTableName){
+            return true;
+        }
+        int covertTypeMaxValue = 2;
+        return sqlField.getConvertType() == null || sqlField.getConvertType() > covertTypeMaxValue;
+    }
+
     /**
      * @param sql          insertSQL语句
      * @param integerList  需要删除的索引列表
@@ -69,15 +84,15 @@ public class SqlFilterImpl implements SqlFilterService {
      * @param primaryKey   主键filed 如："id"
      * @throws IOException
      */
-    public String sqlFilter(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey) throws IOException {
+    public String sqlFilter(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType) throws IOException {
         if (StrUtil.isBlank(sql)) {
             return null;
         }
         StringBuilder stringBuilder = new StringBuilder();
-        boolean isFormat = true;
         String splitWord = "values";
         String splitSymbol = ",";
-        String newSql = sql.replace(oldTableName, newTableName).toLowerCase();
+        String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "values", "values");
+        String newSql = replaceValuesAfterSQL.replace(oldTableName, newTableName);
         String[] split = newSql.split(splitWord);
         if (ArrayUtil.isEmpty(split)) {
             return null;
@@ -104,7 +119,7 @@ public class SqlFilterImpl implements SqlFilterService {
                 newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ")values";
                 String join = String.join(",", newSqlArr);
                 System.out.println("values前 = " + join.toLowerCase());
-                stringBuilder.append(join.toLowerCase());
+                stringBuilder.append(convertField(join, convertType));
             } else {
                 this.idList.add(newSqlArr[primaryKeyIndex]);
                 newSqlArr[0] = "(" + newSqlArr[0];
@@ -144,6 +159,7 @@ public class SqlFilterImpl implements SqlFilterService {
 
     /**
      * 可以根据忽略大小写和任意空格的条件，返回字符串数组中指定字符串的索引位置。需要注意的是，空格不仅包括普通空格，还包括制表符和换行符等空白字符。
+     *
      * @param arr 数组
      * @param str 目标字符串
      * @return 索引位置
@@ -165,5 +181,28 @@ public class SqlFilterImpl implements SqlFilterService {
         }
         // 没有找到，返回-1
         return -1;
+    }
+
+    /**
+     * 新增SQL语句 字段命名风格 0：下划线，1：小驼峰，2：全小写
+     * @param insertSql insertSQL语句
+     * @param convertType 转换类型
+     * @return sql语句
+     */
+    private static String convertField(String insertSql, Integer convertType) {
+        String sql = null;
+        switch (convertType) {
+            case 1:
+                sql = StrUtil.toCamelCase(insertSql);
+                break;
+            case 2:
+                sql = insertSql.toLowerCase();
+                break;
+            default:
+                //小驼峰转下划线
+                sql = insertSql.replaceAll("(?<=[a-z])([A-Z])", "_$1").toLowerCase();;
+                break;
+        }
+        return sql;
     }
 }

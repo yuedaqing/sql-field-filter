@@ -15,7 +15,7 @@ public class SqlUtil {
     /**
      * 以源数组为准，找出新数组与源数组不同元素的索引位置
      *
-     * @param array1 源数组
+     * @param array1 原数组
      * @param array2 新数组
      * @return 不同元素的索引列表
      */

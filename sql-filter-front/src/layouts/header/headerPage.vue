@@ -1,5 +1,8 @@
 <template>
-  <a-layout class="layout" style="height: 100%; width: 100%">
+  <a-layout
+    class="layout"
+    style="display: flex; flex-direction: column; width: 100%; min-height: 100%"
+  >
     <a-layout-header>
       <div style="display: flex">
         <div class="logo">
@@ -23,11 +26,18 @@
         </div>
       </div>
     </a-layout-header>
-    <a-layout-content style="padding: 0 50px">
-      <div :style="{ background: '#fff', padding: '24px', minHeight: '100%' }">
+    <a-layout-content>
+      <div
+        :style="{
+          background: '#fff',
+          padding: '24px',
+          minHeight: 'calc(100vh - 146px)',
+        }"
+      >
         <router-view />
       </div>
     </a-layout-content>
+    <!--    style="background: #fff;padding: 24px;min-width: 100%; min-height: 100%"-->
     <a-layout-footer style="text-align: center">
       SQL Filter ©2023 Created by YueYue
     </a-layout-footer>
@@ -36,7 +46,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import router from "@/router";
-import IndexPage from "@/pages/insert/indexPage.vue";
 
 const selectedKeys = ref<string[]>(["index"]);
 const changePage = ({ item, key, keyPath }: any) => {
