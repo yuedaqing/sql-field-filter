@@ -9,7 +9,6 @@ import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
 import com.yue.sqlfilter.utils.SqlFieldUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,10 +43,10 @@ public class SqlFilterImpl implements SqlFilterService {
             String[] arr1 = field1.toLowerCase().replaceAll("\\s", "").split(",");
             String[] arr2 = field2.toLowerCase().replaceAll("\\s", "").split(",");
             List<Integer> excludeList = SqlFieldUtil.elementIndex(arr2, arr1);
-             List<String> idList = new ArrayList<>();
+            List<String> idList = new ArrayList<>();
 
             for (int i = 0; i < split.length; i++) {
-                String newSqlContent = this.sqlFilter(split[i], excludeList, oldTableName, newTableName, idField, sqlField.getConvertType(),idList);
+                String newSqlContent = this.filterSQL(split[i], excludeList, oldTableName, newTableName, idField, sqlField.getConvertType(), idList);
                 stringBuilder.append(newSqlContent);
             }
             String join = String.join(",", idList);
@@ -82,60 +81,58 @@ public class SqlFilterImpl implements SqlFilterService {
      * @param primaryKey   主键filed 如："id"
      * @throws IOException
      */
-    public String sqlFilter(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType,List<String> idList) {
+    public String filterSQL(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType, List<String> idList) {
         if (StrUtil.isBlank(sql)) {
             return null;
         }
-        ThrowUtils.throwIf(SqlFieldUtil.checkInsertSql(sql),ErrorCode.PARAMS_ERROR,"SQL语句不规范");
-        StringBuilder stringBuilder = new StringBuilder();
+        ThrowUtils.throwIf(SqlFieldUtil.checkInsertSql(sql), ErrorCode.PARAMS_ERROR, "SQL语句不规范");
+        StringBuilder resultBuilder = new StringBuilder();
         String splitWord = "values";
         String splitSymbol = ",";
-        String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "values", "values");
+        String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "VALUES", "values");
         String newSql = replaceValuesAfterSQL.replace(oldTableName, newTableName);
         String[] split = newSql.split(splitWord);
-        if (split.length > 2){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"SQL语句不规范");
-        }
-        if (ArrayUtil.isEmpty(split)) {
-            return null;
+        // 只要VALUES分割后的长度大于2就说明SQL语句不规范
+        if (split.length > 2) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "SQL语句不规范");
         }
         Integer primaryKeyIndex = null;
+        // 处理两个values部分
         for (int i = 0; i < split.length; i++) {
-            //1. 去除values前后的()
+            // 去除values前后的括号
             String removeBracket = StrUtil.subBetween(split[i], "(", ")");
             String beforeBracket = split[i].substring(0, split[i].indexOf("("));
-            //2. 分割字符串
+            // 分割values括号内的内容为数组
             String[] arr = removeBracket.split(splitSymbol);
             if (ArrayUtil.isEmpty(arr)) {
                 return null;
             }
+            // 将指定下标的value数组移除，并根据需要进行类型转换
             int[] indexArr = new int[integerList.size()];
             for (int i1 = 0; i1 < integerList.size(); i1++) {
                 indexArr[i1] = integerList.get(i1);
             }
             String[] newSqlArr = removeValuesByIndices(arr, indexArr);
             if (i == 0) {
-
                 primaryKeyIndex = findIndexIgnoreCaseAndSpace(newSqlArr, primaryKey);
                 newSqlArr[0] = beforeBracket + "(" + newSqlArr[0];
                 newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ")values";
+                // 数组转为字符串，并添加到结果中
                 String join = String.join(",", newSqlArr);
-                System.out.println("values前 = " + join.toLowerCase());
-                stringBuilder.append(convertField(join, convertType));
+                log.info("values前 = " + join.toLowerCase());
+                resultBuilder.append(convertField(join, convertType));
             } else {
                 idList.add(newSqlArr[primaryKeyIndex]);
                 newSqlArr[0] = "(" + newSqlArr[0];
                 newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ");";
+                // 数组转为字符串，并添加到结果中
                 String join = String.join(",", newSqlArr);
-                System.out.println("values后 = " + join);
-                stringBuilder.append(join);
+                log.info("values后 = " + join);
+                resultBuilder.append(join);
             }
         }
-        System.out.println(stringBuilder);
-        //写入过滤后的sql语句
-//        FileWriter fileWriter = new FileWriter("D:\\code\\yue-project\\sql-filter\\sql.text");
-//        fileWriter.append("\n" + stringBuilder);
-        return stringBuilder.toString();
+        System.out.println(resultBuilder);
+        return resultBuilder.toString();
 
     }
 

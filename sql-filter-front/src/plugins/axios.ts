@@ -47,14 +47,17 @@ export class Request {
       (res: any) => {
         // 直接返回res，当然你也可以只返回res.data
         // 系统如果有自定义code也可以在这里处理
-        // const { data, config } = res; // 解构
-
-        console.log("响应拦截器" + res);
-        console.log(res);
-        if (res.code === 40000) {
-          message.error(res.message);
+        const { data, config } = res; // 解构
+        if (
+          res.request.responseType === "blob" ||
+          res.request.responseType === "arraybuffer"
+        ) {
+          console.log("响应的内容是文件流哦！");
+          return res;
         }
-        return res;
+        console.log("响应拦截器");
+        console.log(res);
+        return data;
       },
       (err: any) => {
         // 这里用来处理http常见错误，进行全局提示

@@ -1,13 +1,7 @@
 package com.yue.sqlfilter.utils;
 
-import cn.hutool.db.sql.SqlExecutor;
-import cn.hutool.db.sql.SqlFormatter;
-import cn.hutool.db.sql.SqlUtil;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author 可乐
@@ -46,7 +40,6 @@ public class SqlFieldUtil {
                 resultList.add(array2[i]);
             }
         }
-        System.out.println("resultList = " + resultList);
         return indexList;
     }
 

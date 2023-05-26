@@ -202,7 +202,7 @@ const selectedFile = ref<File | null>(null);
  */
 const beforeUpload: UploadProps["beforeUpload"] = (file) => {
   console.log("beforeUpload:", file);
-  defaultFileList.value.push(file);
+  defaultFileList.value[0] = file;
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isLt2M) {
     selectedFile.value = null;

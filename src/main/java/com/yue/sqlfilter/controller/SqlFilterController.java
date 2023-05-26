@@ -2,7 +2,9 @@ package com.yue.sqlfilter.controller;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.map.MapUtil;
+import com.yue.sqlfilter.common.BaseResponse;
 import com.yue.sqlfilter.common.ErrorCode;
+import com.yue.sqlfilter.common.ResultUtils;
 import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
@@ -33,7 +35,7 @@ public class SqlFilterController {
     private SqlFilterService sqlFilterService;
 
     @PostMapping("/insert")
-    public void getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
+    public BaseResponse<?> getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
         ThrowUtils.throwIf(sqlFilterService.validationField(sqlField), ErrorCode.PARAMS_ERROR);
         Map<String, String> map = sqlFilterService.insertFilter(multipartFile, sqlField);
         String ids = map.get("ids");
@@ -52,5 +54,6 @@ public class SqlFilterController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return ResultUtils.success("");
     }
 }
