@@ -42,6 +42,7 @@ public class SqlFieldUtil {
         }
         return indexList;
     }
+    private static final String INSERT_PATTERN = "^\\s*INSERT\\s+INTO\\s+[\\w\\.\\-]+\\s*\\((\\s*[\\w\\.\\-]+\\s*,?\\s*)+\\)\\s*VALUES\\s*\\((\\s*('[^'\\\\]*(\\\\.[^'\\\\]*)*'|[\\d\\.]+|null)\\s*,?\\s*)+\\)\\s*;?\\s*$";
 
     /**
      * insert SQL语句规范性检验
@@ -53,7 +54,7 @@ public class SqlFieldUtil {
         // 使用正则表达式匹配insert语句，以下仅匹配了一部分常用的语法
         String regex = "^\\s*INSERT\\s+INTO\\s+\\w+\\s*\\(.*\\)\\s*VALUES\\s*\\(.*\\)\\s*\\s*$";
         for (int i = 0; i < sql.split(";").length; i++) {
-            if (!sql.matches(regex)) {
+            if (!INSERT_PATTERN.matches(regex)) {
                 return true;
             }
         }

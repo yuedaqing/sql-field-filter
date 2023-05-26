@@ -4,7 +4,6 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.yue.sqlfilter.common.ErrorCode;
 import com.yue.sqlfilter.exception.BusinessException;
-import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
 import com.yue.sqlfilter.utils.SqlFieldUtil;
