@@ -38,15 +38,19 @@ public class SqlFilterImpl implements SqlFilterService {
             if (StrUtil.isBlank(content)) {
                 return map;
             }
-            String[] split = content.split(";");
+            String[] split = content.trim().split(";");
 
             String[] arr1 = field1.toLowerCase().replaceAll("\\s", "").split(",");
             String[] arr2 = field2.toLowerCase().replaceAll("\\s", "").split(",");
             List<Integer> excludeList = SqlFieldUtil.elementIndex(arr2, arr1);
             List<String> idList = new ArrayList<>();
-
+            if (ArrayUtil.isEmpty(split)) {
+                return map;
+            }
             for (int i = 0; i < split.length; i++) {
-                String newSqlContent = this.filterSQL(split[i], excludeList, oldTableName, newTableName, idField, sqlField.getConvertType(), idList);
+                String sql = split[i].trim();
+//                ThrowUtils.throwIf(SqlFieldUtil.checkInsertSql(sql), ErrorCode.PARAMS_ERROR, "SQL语句不规范");
+                String newSqlContent = this.filterSQL(sql, excludeList, oldTableName, newTableName, idField, sqlField.getConvertType(), idList);
                 stringBuilder.append(newSqlContent);
             }
             String join = String.join(",", idList);
@@ -82,14 +86,10 @@ public class SqlFilterImpl implements SqlFilterService {
      * @throws IOException
      */
     public String filterSQL(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType, List<String> idList) {
-        if (StrUtil.isBlank(sql)) {
-            return null;
-        }
-        ThrowUtils.throwIf(SqlFieldUtil.checkInsertSql(sql), ErrorCode.PARAMS_ERROR, "SQL语句不规范");
         StringBuilder resultBuilder = new StringBuilder();
         String splitWord = "values";
         String splitSymbol = ",";
-        String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "VALUES", "values");
+        String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "values", "values");
         String newSql = replaceValuesAfterSQL.replace(oldTableName, newTableName);
         String[] split = newSql.split(splitWord);
         // 只要VALUES分割后的长度大于2就说明SQL语句不规范
@@ -97,6 +97,7 @@ public class SqlFilterImpl implements SqlFilterService {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "SQL语句不规范");
         }
         Integer primaryKeyIndex = null;
+        split[split.length-1] = split[split.length-1].trim();
         // 处理两个values部分
         for (int i = 0; i < split.length; i++) {
             // 去除values前后的括号
@@ -124,7 +125,7 @@ public class SqlFilterImpl implements SqlFilterService {
             } else {
                 idList.add(newSqlArr[primaryKeyIndex]);
                 newSqlArr[0] = "(" + newSqlArr[0];
-                newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ");";
+                newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ");\n";
                 // 数组转为字符串，并添加到结果中
                 String join = String.join(",", newSqlArr);
                 log.info("values后 = " + join);

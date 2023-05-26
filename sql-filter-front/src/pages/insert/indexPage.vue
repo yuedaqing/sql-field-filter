@@ -22,7 +22,7 @@
         />
         <a-tooltip
           placement="right"
-          title="Prompt Text"
+          title="原字段指：上传的insertSQL文件中的全部属性"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
@@ -46,7 +46,7 @@
         />
         <a-tooltip
           placement="right"
-          title="Prompt Text"
+          title="新字段指：新字段中必须有原字段中的任意(一个或多个)属性，且字段属性使用英文逗号分割"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
@@ -70,7 +70,7 @@
         />
         <a-tooltip
           placement="right"
-          title="Prompt Text"
+          title="主键字段：根据你输入的主键字段(也可以是其它字段)，在下载的SQL文件中会返回全部的主键字段及数量"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
@@ -94,7 +94,7 @@
         />
         <a-tooltip
           placement="right"
-          title="Prompt Text"
+          title="原表名：上传的SQL文件中的表名"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
@@ -118,7 +118,7 @@
         />
         <a-tooltip
           placement="right"
-          title="Prompt Text"
+          title="新表名：下载的SQL文件中的表名"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
@@ -240,6 +240,7 @@ const blobDownloadFile = (res: any, type: string, fileName: string) => {
  * 上传文件
  */
 const onFinish = async () => {
+  uploading.value = true;
   console.log(selectedFile.value);
   if (!selectedFile.value) {
     message.error("请上传一个SQL文件");
@@ -273,6 +274,7 @@ const onFinish = async () => {
   }
   defaultFileList.value = [];
   selectedFile.value = null;
+  uploading.value = false;
 };
 const removeFile = () => {
   selectedFile.value = null;

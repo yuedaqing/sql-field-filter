@@ -1,10 +1,8 @@
 package com.yue.sqlfilter.service;
 
-import com.yue.sqlfilter.common.BaseResponse;
 import com.yue.sqlfilter.model.SqlField;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Map;
 
 /**

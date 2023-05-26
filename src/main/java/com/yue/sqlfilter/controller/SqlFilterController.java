@@ -35,7 +35,7 @@ public class SqlFilterController {
     private SqlFilterService sqlFilterService;
 
     @PostMapping("/insert")
-    public BaseResponse<?> getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
+    public void getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
         ThrowUtils.throwIf(sqlFilterService.validationField(sqlField), ErrorCode.PARAMS_ERROR);
         Map<String, String> map = sqlFilterService.insertFilter(multipartFile, sqlField);
         String ids = map.get("ids");
@@ -54,6 +54,5 @@ public class SqlFilterController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ResultUtils.success("");
     }
 }

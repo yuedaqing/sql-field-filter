@@ -51,15 +51,13 @@ public class SqlFieldUtil {
      */
     public static boolean checkInsertSql(String sql) {
         // 使用正则表达式匹配insert语句，以下仅匹配了一部分常用的语法
-        String regex = "^\\s*INSERT\\s+INTO\\s+\\w+\\s*\\(.*\\)\\s*VALUES\\s*\\(.*\\)\\s*;\\s*$";
-        boolean flag = false;
+        String regex = "^\\s*INSERT\\s+INTO\\s+\\w+\\s*\\(.*\\)\\s*VALUES\\s*\\(.*\\)\\s*\\s*$";
         for (int i = 0; i < sql.split(";").length; i++) {
             if (!sql.matches(regex)) {
-                flag = true;
-                break;
+                return true;
             }
         }
-        return flag;
+        return false;
 
     }
 }
