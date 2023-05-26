@@ -1,12 +1,18 @@
 package com.yue.sqlfilter.utils;
 
+import cn.hutool.db.sql.SqlExecutor;
+import cn.hutool.db.sql.SqlFormatter;
+import cn.hutool.db.sql.SqlUtil;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author 可乐
  */
-public class SqlUtil {
+public class SqlFieldUtil {
     public static void main(String[] args) {
 //        fieldDifference();
 //        List<Integer> integers = elementIndex();
@@ -19,7 +25,7 @@ public class SqlUtil {
      * @param array2 新数组
      * @return 不同元素的索引列表
      */
-    public static List<Integer> elementIndex(String[] array1,String[] array2){
+    public static List<Integer> elementIndex(String[] array1, String[] array2) {
 //        String[] array1 = {"A", "B", "C", "D", "E"};
 //        String[] array2 = {"B", "C", "E", "F", "G","123"};
         // 用于存储不同元素在第二个数组中的下标
@@ -36,11 +42,31 @@ public class SqlUtil {
                 }
             }
             if (!isEqual) {
-                indexList.add(i+1);
+                indexList.add(i + 1);
                 resultList.add(array2[i]);
             }
         }
         System.out.println("resultList = " + resultList);
         return indexList;
+    }
+
+    /**
+     * insert SQL语句规范性检验
+     *
+     * @param sql insertSQL语句校验
+     * @return true：不规范， false规范
+     */
+    public static boolean checkInsertSql(String sql) {
+        // 使用正则表达式匹配insert语句，以下仅匹配了一部分常用的语法
+        String regex = "^\\s*INSERT\\s+INTO\\s+\\w+\\s*\\(.*\\)\\s*VALUES\\s*\\(.*\\)\\s*;\\s*$";
+        boolean flag = false;
+        for (int i = 0; i < sql.split(";").length; i++) {
+            if (!sql.matches(regex)) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
+
     }
 }

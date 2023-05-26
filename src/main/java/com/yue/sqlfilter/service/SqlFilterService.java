@@ -16,7 +16,7 @@ public interface SqlFilterService {
      * @param file sql文件
      * @return 替换后的sql文件
      */
-    Map<String,String> insertFilter(MultipartFile file, SqlField sqlField) throws IOException;
+    Map<String,String> insertFilter(MultipartFile file, SqlField sqlField);
 
     /**
      * 校验 字段

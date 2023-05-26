@@ -2,9 +2,14 @@ package com.yue.sqlfilter.service.imp;
 
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import com.yue.sqlfilter.common.ErrorCode;
+import com.yue.sqlfilter.exception.BusinessException;
+import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
-import com.yue.sqlfilter.utils.SqlUtil;
+import com.yue.sqlfilter.utils.SqlFieldUtil;
+import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,50 +20,43 @@ import java.util.*;
  * @author 可乐
  */
 @Service
+@Slf4j
 public class SqlFilterImpl implements SqlFilterService {
-    private List<String> idList = new ArrayList<>();
 
     @Override
-    public Map<String, String> insertFilter(MultipartFile file, SqlField sqlField) throws IOException {
+    public Map<String, String> insertFilter(MultipartFile file, SqlField sqlField) {
         String field1 = sqlField.getField1();
         String field2 = sqlField.getField2();
         String idField = sqlField.getIdField();
-
-        Map<String, String> map = new HashMap<>();
-        byte[] bytes = file.getBytes();
-        String content = new String(bytes);
-        if (StrUtil.isBlank(content)) {
-            return map;
-        }
-        String[] arr1 = field1.toLowerCase().replaceAll("\\s", "").split(",");
-        String[] arr2 = field2.toLowerCase().replaceAll("\\s", "").split(",");
-
-        List<Integer> excludeList = SqlUtil.elementIndex(arr2, arr1);
-//        FileReader fileReader = new FileReader("D:\\code\\yue-project\\sql-filter\\basic-sql.text");
-//        String string = fileReader.readString();
-        String[] split = content.split(";");
-//        String oldTableName = "`hljqlk-center`.`up_task_public_basic`";
         String oldTableName = sqlField.getOldTableName();
-//        String newTableName = "`hz_material_file`.`dn_task_public_basic`";
         String newTableName = sqlField.getNewTableName();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (int i = 0; i < split.length; i++) {
-            try {
-                String newSqlContent = this.sqlFilter(split[i], excludeList, oldTableName, newTableName, idField,sqlField.getConvertType());
-                stringBuilder.append(newSqlContent);
-            } catch (IOException e) {
-                e.printStackTrace();
+        Map<String, String> map = new HashMap<>();
+        try {
+            byte[] bytes = file.getBytes();
+            String content = new String(bytes);
+            if (StrUtil.isBlank(content)) {
+                return map;
             }
+            String[] split = content.split(";");
+
+            String[] arr1 = field1.toLowerCase().replaceAll("\\s", "").split(",");
+            String[] arr2 = field2.toLowerCase().replaceAll("\\s", "").split(",");
+            List<Integer> excludeList = SqlFieldUtil.elementIndex(arr2, arr1);
+             List<String> idList = new ArrayList<>();
+
+            for (int i = 0; i < split.length; i++) {
+                String newSqlContent = this.sqlFilter(split[i], excludeList, oldTableName, newTableName, idField, sqlField.getConvertType(),idList);
+                stringBuilder.append(newSqlContent);
+            }
+            String join = String.join(",", idList);
+            map.put("ids", join);
+            map.put("idNum", idList.size() + "");
+            map.put("SQLContent", stringBuilder.toString());
+        } catch (IOException e) {
+            log.info("文件异常:{}", e.getMessage());
         }
-        String join = String.join(",", this.idList);
-        //写入主键
-//        FileWriter idWriter = new FileWriter("D:\\code\\yue-project\\sql-filter\\id.text");
-//        idWriter.write("sql总条目数" + this.idList.size());
-//        idWriter.append(join);
-        map.put("ids", join);
-        map.put("idNum", this.idList.size() + "");
-        map.put("SQLContent", stringBuilder.toString());
         return map;
     }
 
@@ -69,7 +67,7 @@ public class SqlFilterImpl implements SqlFilterService {
         boolean idField = StrUtil.isBlank(sqlField.getIdField());
         boolean oldTableName = StrUtil.isBlank(sqlField.getOldTableName());
         boolean newTableName = StrUtil.isBlank(sqlField.getNewTableName());
-        if (field1 || field2 || idField || oldTableName || newTableName){
+        if (field1 || field2 || idField || oldTableName || newTableName) {
             return true;
         }
         int covertTypeMaxValue = 2;
@@ -84,16 +82,20 @@ public class SqlFilterImpl implements SqlFilterService {
      * @param primaryKey   主键filed 如："id"
      * @throws IOException
      */
-    public String sqlFilter(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType) throws IOException {
+    public String sqlFilter(String sql, List<Integer> integerList, String oldTableName, String newTableName, String primaryKey, Integer convertType,List<String> idList) {
         if (StrUtil.isBlank(sql)) {
             return null;
         }
+        ThrowUtils.throwIf(SqlFieldUtil.checkInsertSql(sql),ErrorCode.PARAMS_ERROR,"SQL语句不规范");
         StringBuilder stringBuilder = new StringBuilder();
         String splitWord = "values";
         String splitSymbol = ",";
         String replaceValuesAfterSQL = StrUtil.replaceIgnoreCase(sql, "values", "values");
         String newSql = replaceValuesAfterSQL.replace(oldTableName, newTableName);
         String[] split = newSql.split(splitWord);
+        if (split.length > 2){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"SQL语句不规范");
+        }
         if (ArrayUtil.isEmpty(split)) {
             return null;
         }
@@ -121,7 +123,7 @@ public class SqlFilterImpl implements SqlFilterService {
                 System.out.println("values前 = " + join.toLowerCase());
                 stringBuilder.append(convertField(join, convertType));
             } else {
-                this.idList.add(newSqlArr[primaryKeyIndex]);
+                idList.add(newSqlArr[primaryKeyIndex]);
                 newSqlArr[0] = "(" + newSqlArr[0];
                 newSqlArr[newSqlArr.length - 1] = newSqlArr[newSqlArr.length - 1] + ");";
                 String join = String.join(",", newSqlArr);
@@ -185,7 +187,8 @@ public class SqlFilterImpl implements SqlFilterService {
 
     /**
      * 新增SQL语句 字段命名风格 0：下划线，1：小驼峰，2：全小写
-     * @param insertSql insertSQL语句
+     *
+     * @param insertSql   insertSQL语句
      * @param convertType 转换类型
      * @return sql语句
      */
@@ -200,7 +203,8 @@ public class SqlFilterImpl implements SqlFilterService {
                 break;
             default:
                 //小驼峰转下划线
-                sql = insertSql.replaceAll("(?<=[a-z])([A-Z])", "_$1").toLowerCase();;
+                sql = insertSql.replaceAll("(?<=[a-z])([A-Z])", "_$1").toLowerCase();
+                ;
                 break;
         }
         return sql;

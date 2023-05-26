@@ -1,7 +1,7 @@
 // index.ts
 import type { AxiosInstance, AxiosRequestConfig } from "axios";
 import axios from "axios";
-import { notification } from "ant-design-vue";
+import { message, notification } from "ant-design-vue";
 import { h } from "vue";
 import { CloseCircleOutlined } from "@ant-design/icons-vue";
 
@@ -43,6 +43,64 @@ export class Request {
         return Promise.reject(err);
       }
     );
+    this.instance.interceptors.response.use(
+      (res: any) => {
+        // 直接返回res，当然你也可以只返回res.data
+        // 系统如果有自定义code也可以在这里处理
+        // const { data, config } = res; // 解构
+
+        console.log("响应拦截器" + res);
+        console.log(res);
+        if (res.code === 40000) {
+          message.error(res.message);
+        }
+        return res;
+      },
+      (err: any) => {
+        // 这里用来处理http常见错误，进行全局提示
+        let message = "";
+        switch (err.response.status) {
+          case 400:
+            message = "请求错误(400)";
+            break;
+          case 401:
+            message = "未授权，请重新登录(401)";
+            // 这里可以做清空storage并跳转到登录页的操作
+            break;
+          case 403:
+            message = "拒绝访问(403)";
+            break;
+          case 404:
+            message = "请求出错(404)";
+            break;
+          case 408:
+            message = "请求超时(408)";
+            break;
+          case 500:
+            message = "服务器错误(500)";
+            break;
+          case 501:
+            message = "服务未实现(501)";
+            break;
+          case 502:
+            message = "网络错误(502)";
+            break;
+          case 503:
+            message = "服务不可用(503)";
+            break;
+          case 504:
+            message = "网络超时(504)";
+            break;
+          case 505:
+            message = "HTTP版本不受支持(505)";
+            break;
+          default:
+            message = `连接出错(${err.response.status})!`;
+        }
+        openNotification(message);
+        return Promise.reject(err.response);
+      }
+    );
   }
 }
 
@@ -75,7 +133,6 @@ export async function postFile<T>(
   config?: any
 ): Promise<T> {
   const res = await newRequest.instance.post<T>(url, data, config);
-  console.log("文件下载啦" + res.data);
   return res.data;
 }
 

@@ -1,4 +1,7 @@
 <template>
+  <div class="alert">
+    <a-alert message="请先阅读使用说明!!!" type="success" />
+  </div>
   <div id="page-style">
     <a-form
       :label-col="{ span: 8 }"
@@ -17,11 +20,18 @@
           placeholder="输入原字段"
           style="width: 90%"
         />
-        <a-button shape="circle" style="margin-left: 8px">
-          <template #icon>
-            <question-outlined />
-          </template>
-        </a-button>
+        <a-tooltip
+          placement="right"
+          title="Prompt Text"
+          color="purple"
+          :get-popup-container="getPopupContainer"
+        >
+          <a-button shape="circle" style="margin-left: 8px">
+            <template #icon>
+              <question-outlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-form-item>
       <a-form-item
         label="新字段"
@@ -34,11 +44,18 @@
           placeholder="输入新字段"
           style="width: 90%"
         />
-        <a-button shape="circle" style="margin-left: 8px">
-          <template #icon>
-            <question-outlined />
-          </template>
-        </a-button>
+        <a-tooltip
+          placement="right"
+          title="Prompt Text"
+          color="purple"
+          :get-popup-container="getPopupContainer"
+        >
+          <a-button shape="circle" style="margin-left: 8px">
+            <template #icon>
+              <question-outlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-form-item>
       <a-form-item
         :wrapper-col="{ span: 8 }"
@@ -51,11 +68,18 @@
           placeholder="输入主键字段"
           style="width: 90%"
         />
-        <a-button shape="circle" style="margin-left: 8px">
-          <template #icon>
-            <question-outlined />
-          </template>
-        </a-button>
+        <a-tooltip
+          placement="right"
+          title="Prompt Text"
+          color="purple"
+          :get-popup-container="getPopupContainer"
+        >
+          <a-button shape="circle" style="margin-left: 8px">
+            <template #icon>
+              <question-outlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-form-item>
       <a-form-item
         :wrapper-col="{ span: 8 }"
@@ -68,11 +92,18 @@
           placeholder="输入原表名"
           style="width: 90%"
         />
-        <a-button shape="circle" style="margin-left: 8px">
-          <template #icon>
-            <question-outlined />
-          </template>
-        </a-button>
+        <a-tooltip
+          placement="right"
+          title="Prompt Text"
+          color="purple"
+          :get-popup-container="getPopupContainer"
+        >
+          <a-button shape="circle" style="margin-left: 8px">
+            <template #icon>
+              <question-outlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-form-item>
       <a-form-item
         :wrapper-col="{ span: 8 }"
@@ -85,11 +116,18 @@
           placeholder="输入新表名"
           style="width: 90%"
         />
-        <a-button shape="circle" style="margin-left: 8px">
-          <template #icon>
-            <question-outlined />
-          </template>
-        </a-button>
+        <a-tooltip
+          placement="right"
+          title="Prompt Text"
+          color="purple"
+          :get-popup-container="getPopupContainer"
+        >
+          <a-button shape="circle" style="margin-left: 8px">
+            <template #icon>
+              <question-outlined />
+            </template>
+          </a-button>
+        </a-tooltip>
       </a-form-item>
       <a-form-item label="字段风格">
         <a-radio-group v-model:value="formState.convertType">
@@ -145,6 +183,9 @@ interface FormState {
   convertType: number;
 }
 
+const getPopupContainer = (trigger: HTMLElement) => {
+  return trigger.parentElement;
+};
 const formState = ref<FormState>({
   field1: "",
   field2: "",
@@ -242,5 +283,16 @@ const removeFile = () => {
 <style scoped>
 #page-style {
   margin-top: 50px;
+}
+
+.alert {
+  position: absolute;
+
+  left: 50%;
+
+  transform: translateX(-50%); /* 移动元素本身50% */
+  width: 700px;
+  text-align: center;
+  background: aqua;
 }
 </style>

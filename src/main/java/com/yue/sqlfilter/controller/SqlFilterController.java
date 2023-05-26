@@ -1,10 +1,12 @@
 package com.yue.sqlfilter.controller;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.map.MapUtil;
 import com.yue.sqlfilter.common.ErrorCode;
 import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
+import com.yue.sqlfilter.utils.SqlFieldUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,26 +35,11 @@ public class SqlFilterController {
     @PostMapping("/insert")
     public void getNewInsertSql(@RequestPart("file") MultipartFile multipartFile, SqlField sqlField, HttpServletResponse response){
         ThrowUtils.throwIf(sqlFilterService.validationField(sqlField), ErrorCode.PARAMS_ERROR);
-        Map<String, String> map = null;
-        try {
-            map = sqlFilterService.insertFilter(multipartFile, sqlField);
-        } catch (IOException e) {
-            log.info("文件异常:{}",e.getMessage());
-        }
+        Map<String, String> map = sqlFilterService.insertFilter(multipartFile, sqlField);
         String ids = map.get("ids");
         String idNum = map.get("idNum");
         String sqlContent = map.get("SQLContent");
         byte[] idContent = ("主键主数量："+idNum + "\n" +"主键内容：\n"+ ids+"\n").getBytes(StandardCharsets.UTF_8);
-        // 创建 ResponseHeaders
-//        HttpHeaders headers = new HttpHeaders();
-////        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=file1.txt");
-//        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=file2.txt");
-//        // 将文件内容和 Headers 封装到 ResponseEntity 对象中返回
-//        ResponseEntity<Object> response = ResponseEntity.ok().headers(headers).body(new LinkedMultiValueMap<String, Object>() {{
-////            add("file1.txt", new ByteArrayResource(idContent));
-//            add("file2.txt", new ByteArrayResource(sqlContent.getBytes(StandardCharsets.UTF_8)));
-//        }});
-
         try {
             response.setHeader("Content-Disposition","attachment;filename="+ URLEncoder.encode("sql.text", "utf-8"));
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
