@@ -1,14 +1,10 @@
 package com.yue.sqlfilter.controller;
 
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.map.MapUtil;
-import com.yue.sqlfilter.common.BaseResponse;
 import com.yue.sqlfilter.common.ErrorCode;
-import com.yue.sqlfilter.common.ResultUtils;
 import com.yue.sqlfilter.exception.ThrowUtils;
 import com.yue.sqlfilter.model.SqlField;
 import com.yue.sqlfilter.service.SqlFilterService;
-import com.yue.sqlfilter.utils.SqlFieldUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

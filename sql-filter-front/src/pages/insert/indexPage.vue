@@ -22,7 +22,7 @@
         />
         <a-tooltip
           placement="right"
-          title="原字段指：上传的insertSQL文件中的全部属性"
+          title="原字段指：上传的InsertSQL文件中的全部属性"
           color="purple"
           :get-popup-container="getPopupContainer"
         >
